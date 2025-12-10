@@ -21,6 +21,26 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     '.onrender.com'
 ])
 
+# ========== CONFIGURATION CSRF POUR PRODUCTION ==========
+CSRF_TRUSTED_ORIGINS = [
+    'https://perfum-api.onrender.com',
+    'https://*.onrender.com',
+]
+
+# En développement, ajouter http
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend([
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ])
+
+# Configuration de session sécurisée
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = False  # Render gère déjà le SSL
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -72,7 +92,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - support pour dj-database-url (Render)
+# Database
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
@@ -130,9 +150,9 @@ REST_FRAMEWORK = {
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 if not DEBUG:
-    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+    CORS_ALLOWED_ORIGINS = [
         "https://perfum-api.onrender.com",
-    ])
+    ]
 else:
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
