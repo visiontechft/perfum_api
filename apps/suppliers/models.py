@@ -32,17 +32,31 @@ class Supplier(models.Model):
         ('CDF', 'CDF'),
     ]
     
-    name = models.CharField(max_length=100)
+    # 🔥👉 name devient optionnel
+    name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Nom du fournisseur (optionnel)"
+    )
+
     country = models.CharField(max_length=100, db_index=True)
     city = models.CharField(max_length=100, db_index=True)
+
     localisation = models.CharField(
         max_length=200, 
         blank=True, 
         null=True,
         help_text="Ex: quartier, rue ou détails supplémentaires de la ville"
     )
-    whatsapp = models.CharField(max_length=200, help_text="Numéros multiples possibles séparés par /")
+
+    whatsapp = models.CharField(
+        max_length=200,
+        help_text="Numéros multiples possibles séparés par /"
+    )
+
     prix = models.FloatField(validators=[MinValueValidator(0)])
+
     devise = models.CharField(
         max_length=10, 
         choices=DEVISE_CHOICES, 
@@ -50,6 +64,7 @@ class Supplier(models.Model):
         null=True,
         help_text="Devise optionnelle selon le pays"
     )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,9 +76,10 @@ class Supplier(models.Model):
     
     def __str__(self):
         loc = f", {self.localisation}" if self.localisation else ""
-        return f"{self.name} - {self.city}{loc}, {self.country}"
+        name_display = self.name if self.name else "Sans nom"
+        return f"{name_display} - {self.city}{loc}, {self.country}"
     
-    # Méthode pour remplir la devise automatiquement selon le pays
+    # Auto-devise selon pays
     def save(self, *args, **kwargs):
         if not self.devise and self.country in self.COUNTRY_CURRENCY:
             self.devise = self.COUNTRY_CURRENCY[self.country]
