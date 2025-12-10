@@ -6,7 +6,7 @@ class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = [
-            'id', 'name', 'country', 'city', 'whatsapp',
+            'id', 'name', 'country', 'city', 'localisation', 'whatsapp',
             'prix', 'devise', 'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -14,9 +14,9 @@ class SupplierSerializer(serializers.ModelSerializer):
 class SupplierCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ['name', 'country', 'city', 'whatsapp', 'prix', 'devise']
+        fields = ['name', 'country', 'city', 'localisation', 'whatsapp', 'prix', 'devise']
 
 class SupplierUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ['name', 'country', 'city', 'whatsapp', 'prix', 'devise', 'is_active']
+        fields = ['name', 'country', 'city', 'localisation', 'whatsapp', 'prix', 'devise', 'is_active']

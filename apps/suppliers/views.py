@@ -28,8 +28,8 @@ class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['country', 'city', 'is_active', 'devise']
-    search_fields = ['name', 'country', 'city', 'whatsapp']
+    filterset_fields = ['country', 'city', 'localisation', 'is_active', 'devise']
+    search_fields = ['name', 'country', 'city', 'localisation', 'whatsapp']
     ordering_fields = ['prix', 'created_at']
     
     def get_serializer_class(self):
@@ -81,5 +81,11 @@ class SupplierViewSet(viewsets.ModelViewSet):
                 {'error': 'Le paramètre country est requis'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        cities = Supplier.objects.filter(country=country).values_list('city', flat=True).distinct().order_by('city')
-        return Response(list(cities))
+        # Inclut la localisation dans la récupération des villes
+        cities = Supplier.objects.filter(country=country).values_list('city', 'localisation').distinct()
+        # Formatage : "ville - localisation" si localisation existante
+        formatted_cities = [
+            f"{city} - {localisation}" if localisation else city
+            for city, localisation in cities
+        ]
+        return Response(formatted_cities)
