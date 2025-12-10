@@ -1,6 +1,7 @@
 # ==================== apps/products/models.py ====================
 from django.db import models
 from django.core.validators import MinValueValidator
+from cloudinary.models import CloudinaryField
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -15,7 +16,19 @@ class Product(models.Model):
     description = models.TextField(blank=True, null=True)
     prix = models.FloatField(validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    
+    # Utilisez CloudinaryField au lieu de ImageField
+    image = CloudinaryField(
+        'image',
+        blank=True,
+        null=True,
+        folder='parfums/products',  # Organise les images dans un dossier
+        transformation={
+            'quality': 'auto',
+            'fetch_format': 'auto'
+        }
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -26,3 +39,10 @@ class Product(models.Model):
     
     def __str__(self):
         return f"{self.code} - {self.nom_parfum}"
+    
+    @property
+    def image_url(self):
+        """Retourne l'URL complète de l'image"""
+        if self.image:
+            return self.image.url
+        return None
