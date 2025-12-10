@@ -1,0 +1,10 @@
+django
+djangorestframework 
+django-filter
+django-environ 
+psycopg2-binary 
+pillow 
+drf-yasg 
+django-cors-headers 
+gunicorn 
+whitenoise
