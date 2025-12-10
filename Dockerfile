@@ -12,6 +12,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     gcc \
+    netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier les requirements et installer
@@ -24,11 +25,10 @@ COPY . .
 # Créer les répertoires nécessaires
 RUN mkdir -p /app/media /app/staticfiles
 
-# Collecter les fichiers statiques
-RUN python manage.py collectstatic --noinput || true
-
-# Exposer le port
+# Exposer le port (Render utilise la variable PORT)
 EXPOSE 8000
 
-# Script de démarrage
-CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
+# Script de démarrage pour production
+CMD python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
+    gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120

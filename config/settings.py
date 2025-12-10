@@ -1,20 +1,25 @@
 import os
 from pathlib import Path
 import environ
+import dj_database_url
 
-# Initialiser environ
-env = environ.Env(
-    DEBUG=(bool, False)
-)
-
+env = environ.Env(DEBUG=(bool, False))
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Lire le fichier .env
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Lire .env seulement si le fichier existe (dev local)
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG', default=True)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+DEBUG = env('DEBUG', default=False)
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost', 
+    '127.0.0.1',
+    'perfum-api.onrender.com',
+    '.onrender.com'
+])
 
 # Application definition
 INSTALLED_APPS = [
@@ -67,10 +72,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgresql://parfum_user:parfum_pass@db:5432/parfum_db')
-}
+# Database - support pour dj-database-url (Render)
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    DATABASES = {
+        'default': env.db('DATABASE_URL', default='postgresql://parfum_user:parfum_pass@db:5432/parfum_db')
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,10 +129,15 @@ REST_FRAMEWORK = {
 
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+        "https://perfum-api.onrender.com",
+    ])
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 # Swagger Settings
 SWAGGER_SETTINGS = {
