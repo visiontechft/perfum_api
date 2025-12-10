@@ -153,6 +153,7 @@ if not DEBUG:
     CORS_ALLOWED_ORIGINS = [
         "https://perfum-api.onrender.com",
         "https://sensuela.netlify.app",
+        "http://localhost:5173",
     ]
 else:
     CORS_ALLOWED_ORIGINS = [
