@@ -52,3 +52,19 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ce code produit existe déjà.")
 
         return value
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['code', 'nom_parfum', 'nom_etiquette', 'categorie', 
+                  'description', 'prix', 'stock']
+
+class ProductUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['nom_parfum', 'nom_etiquette', 'categorie', 
+                  'description', 'prix', 'stock', 'image']
+        
+class ImageUploadSerializer(serializers.Serializer):
+    image = serializers.ImageField()
