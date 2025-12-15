@@ -86,23 +86,36 @@ class Product(models.Model):
         Retourne l'URL de l'image du produit.
         Si le produit n'a pas d'image spécifique, retourne l'image par défaut de sa catégorie.
         """
-        # Si le produit a une image spécifique, l'utiliser
-        if self.image:
-            return self.image.url
+        try:
+            # Si le produit a une image spécifique, l'utiliser
+            if self.image and hasattr(self.image, 'url'):
+                return self.image.url
+        except Exception:
+            pass
         
         # Sinon, chercher l'image par défaut de la catégorie
         try:
             category_image = CategoryImage.objects.get(categorie=self.categorie)
-            return category_image.image_url
-        except CategoryImage.DoesNotExist:
-            return None
+            if category_image.image and hasattr(category_image.image, 'url'):
+                return category_image.image.url
+        except (CategoryImage.DoesNotExist, Exception):
+            pass
+        
+        return None
     
     def get_image_source(self):
         """Indique si l'image vient du produit ou de la catégorie"""
-        if self.image:
-            return "Produit"
         try:
-            CategoryImage.objects.get(categorie=self.categorie)
-            return "Catégorie"
-        except CategoryImage.DoesNotExist:
-            return "Aucune"
+            if self.image and hasattr(self.image, 'url'):
+                return "Produit"
+        except Exception:
+            pass
+        
+        try:
+            category_image = CategoryImage.objects.get(categorie=self.categorie)
+            if category_image.image and hasattr(category_image.image, 'url'):
+                return "Catégorie"
+        except (CategoryImage.DoesNotExist, Exception):
+            pass
+        
+        return "Aucune"
