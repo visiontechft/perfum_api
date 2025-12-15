@@ -1,7 +1,46 @@
-# ==================== apps/products/models.py ====================
 from django.db import models
 from django.core.validators import MinValueValidator
 from cloudinary.models import CloudinaryField
+
+class CategoryImage(models.Model):
+    """Images par défaut pour chaque catégorie"""
+    CATEGORY_CHOICES = [
+        ('Hommes', 'Hommes'),
+        ('Femmes', 'Femmes'),
+    ]
+    
+    categorie = models.CharField(
+        max_length=20, 
+        choices=CATEGORY_CHOICES,
+        unique=True,
+        verbose_name="Catégorie"
+    )
+    image = CloudinaryField(
+        'image',
+        folder='parfums/categories',
+        transformation={
+            'quality': 'auto',
+            'fetch_format': 'auto'
+        },
+        help_text="Image par défaut pour tous les produits de cette catégorie"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Image de Catégorie'
+        verbose_name_plural = 'Images de Catégories'
+    
+    def __str__(self):
+        return f"Image par défaut - {self.categorie}"
+    
+    @property
+    def image_url(self):
+        """Retourne l'URL complète de l'image"""
+        if self.image:
+            return self.image.url
+        return None
+
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -17,16 +56,17 @@ class Product(models.Model):
     prix = models.FloatField(validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     
-    # Utilisez CloudinaryField au lieu de ImageField
+    # Image spécifique au produit (optionnelle)
     image = CloudinaryField(
         'image',
         blank=True,
         null=True,
-        folder='parfums/products',  # Organise les images dans un dossier
+        folder='parfums/products',
         transformation={
             'quality': 'auto',
             'fetch_format': 'auto'
-        }
+        },
+        help_text="Image spécifique à ce produit (laissez vide pour utiliser l'image par défaut de la catégorie)"
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,7 +82,27 @@ class Product(models.Model):
     
     @property
     def image_url(self):
-        """Retourne l'URL complète de l'image"""
+        """
+        Retourne l'URL de l'image du produit.
+        Si le produit n'a pas d'image spécifique, retourne l'image par défaut de sa catégorie.
+        """
+        # Si le produit a une image spécifique, l'utiliser
         if self.image:
             return self.image.url
-        return None
+        
+        # Sinon, chercher l'image par défaut de la catégorie
+        try:
+            category_image = CategoryImage.objects.get(categorie=self.categorie)
+            return category_image.image_url
+        except CategoryImage.DoesNotExist:
+            return None
+    
+    def get_image_source(self):
+        """Indique si l'image vient du produit ou de la catégorie"""
+        if self.image:
+            return "Produit"
+        try:
+            CategoryImage.objects.get(categorie=self.categorie)
+            return "Catégorie"
+        except CategoryImage.DoesNotExist:
+            return "Aucune"
